@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
 uint64
 sys_exit(void)
@@ -108,3 +109,20 @@ sys_trace(void)
   return 0;
 }
 
+// Get sysinfo
+// addr is a user virtual address, pointing to a struct sysinfo.
+uint64
+sys_sysinfo(void)
+{
+  struct proc *p = myproc();
+  uint64 addr;
+  argaddr(0, &addr);
+  struct sysinfo si;
+  // fill out the freemem field: the number of bytes of free memory.
+  si.freemem = kfreemem();
+  // fill out the nproc field: the number of processes whose state is not UNUSED.
+  si.nproc = nproc();
+  if (copyout(p->pagetable, addr, (char *)&si, sizeof(si)) < 0)
+    return -1;
+  return 0;
+}
