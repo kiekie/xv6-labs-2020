@@ -88,6 +88,34 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
   return &pagetable[PX(0, va)];
 }
 
+
+void
+vmprint(pagetable_t pagetable){
+  printf("page table %p\n", pagetable);
+  for (int entry1 = 0; entry1 < 512; entry1++) {
+    pte_t pte1 = pagetable[entry1];
+    if ((pte1 & PTE_V) == 0)
+      continue;
+    printf(" ..%d: pte %p pa %p\n", entry1, pte1, PTE2PA(pte1));
+    pagetable_t sec_pagetable = (pagetable_t)PTE2PA(pte1);
+
+    for (int entry2 = 0; entry2 < 512; entry2+=1) {
+        pte_t pte2 = sec_pagetable[entry2];
+        if ((pte2 & PTE_V) == 0)
+         continue;
+        printf(" .. ..%d: pte %p pa %p\n", entry2, pte2, PTE2PA(pte2));
+        pagetable_t thi_pagetable = (pagetable_t)PTE2PA(pte2);
+
+        for (int entry3 = 0; entry3 < 512; entry3+=1) {
+          pte_t pte3 = thi_pagetable[entry3];
+          if ((pte3 & PTE_V) == 0)
+            continue;  
+          printf(" .. .. ..%d: pte %p pa %p\n", entry3, pte3, PTE2PA(pte3));
+        }
+      }
+  }
+}
+
 // Look up a virtual address, return the physical address,
 // or 0 if not mapped.
 // Can only be used to look up user pages.
